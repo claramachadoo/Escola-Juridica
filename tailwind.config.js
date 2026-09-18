@@ -29,6 +29,11 @@ export default {
           emerald: '#10b981',
           amber: '#f59e0b',
           rose: '#f43f5e',
+        },
+        // Paleta da marca-mãe (Clara Machado Advocacia & Consultoria) — uso pontual/sutil
+        firm: {
+          navy: '#363160',
+          teal: '#41B3B7',
         }
       },
       fontFamily: {
