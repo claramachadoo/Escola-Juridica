@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escola Jurídica | Gestão Preventiva para Instituições de Ensino</title>
+  <meta name="description" content="Organização jurídica preventiva para instituições de ensino. Reduza conflitos com famílias e decisões improvisadas antes que virem processos." />
+
+  <!-- Fonts: Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              200: '#bae0fd',
+              300: '#7cc5fb',
+              400: '#36a5f7',
+              500: '#0c87eb',
+              600: '#026bc9',
+              700: '#0355a3',
+              800: '#074886',
+              900: '#0c3d6f',
+              950: '#082649',
+            },
+            navy: {
+              800: '#141d33',
+              900: '#0b132b',
+              950: '#060a17',
+            }
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & Babel Standalone -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    body {
+      background-color: #ffffff;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const DIAGNOSTIC_QUESTIONS = [
+      {
+        id: 1,
+        title: "1. Atualização Contratual e Matrículas",
+        question: "O contrato de prestação de serviços educacionais da sua escola foi revisado formalmente nos últimos 12 meses?",
+        hint: "Contratos desatualizados geram vulnerabilidade em cobranças de inadimplência e defesas perante o Procon ou juizados.",
+        category: "Governança Documental",
+        options: [
+          { label: "Sim, revisado formalmente com cláusulas atualizadas para 2026/2027.", points: 12.5, status: "adequate" },
+          { label: "Revisamos apenas valores, mas a minuta é a mesma há anos.", points: 5, status: "attention", alert: "Cláusulas antigas frequentemente são anuladas na Justiça." },
+          { label: "Não foi revisado recentemente ou usamos modelo genérico da internet.", points: 0, status: "risk", alert: "Risco imediato de nulidade contratual e perda de cobranças." },
+        ],
+      },
+      {
+        id: 2,
+        title: "2. Bullying, Cyberbullying e Convivência",
+        question: "A escola possui protocolo formal escrito de apuração e registros para situações de bullying e cyberbullying?",
+        hint: "A Lei 14.811/2024 tipificou o bullying no Código Penal e exige política ativa de combate pelas instituições de ensino.",
+        category: "Compliance & Legislação",
+        options: [
+          { label: "Sim, temos fluxo com etapas de acolhimento, ata formal e acompanhamento.", points: 12.5, status: "adequate" },
+          { label: "Intervimos no bom senso quando ocorre, mas sem protocolo escrito padronizado.", points: 4, status: "attention", alert: "Atuação sem registro formal gera alegações de omissão escolar." },
+          { label: "Não possuímos protocolo ou registros formais para esses incidentes.", points: 0, status: "risk", alert: "Risco de ações de dano moral e responsabilização civil objetiva." },
+        ],
+      },
+      {
+        id: 3,
+        title: "3. Relações com Pais Separados e Guarda",
+        question: "Sua equipe sabe exatamente como agir diante de divergências de pais separados e autorização de retirada de alunos?",
+        hint: "A portaria da escola é o principal local de conflito em disputas de guarda, exigindo procedimento jurídico rígido.",
+        category: "Gestão de Conflitos",
+        options: [
+          { label: "Sim, exigimos cópia da decisão judicial de guarda e seguimos fluxo pré-definido.", points: 12.5, status: "adequate" },
+          { label: "A equipe decide caso a caso no bom senso, mas às vezes surgem impasses tensos.", points: 5, status: "attention", alert: "O bom senso não resguarda a escola contra desacato de ordens judiciais." },
+          { label: "Não há procedimento padronizado; já enfrentamos conflitos na portaria.", points: 0, status: "risk", alert: "Exposição a medidas policiais e pedidos de tutela de urgência." },
+        ],
+      },
+      {
+        id: 4,
+        title: "4. Imagem, Dados e ECA Digital",
+        question: "Existem termos específicos para uso de imagem nas redes sociais e tratamento de dados de alunos (ECA Digital)?",
+        hint: "Cláusulas genéricas de imagem no contrato principal vêm sendo desconsideradas por juízes em atritos familiares.",
+        category: "Compliance & Legislação",
+        options: [
+          { label: "Sim, termos específicos e destacados conforme a nova disciplina do ECA Digital e LGPD.", points: 12.5, status: "adequate" },
+          { label: "Existe apenas uma cláusula genérica no contrato de matrícula.", points: 5, status: "attention", alert: "Termos genéricos não protegem a instituição caso os pais revoguem." },
+          { label: "Não temos autorização formal atualizada dos responsáveis.", points: 0, status: "risk", alert: "Vulnerabilidade perante a ANPD e notificações de remoção de imagem." },
+        ],
+      },
+      {
+        id: 5,
+        title: "5. Acidentes Escolares e Ocorrências",
+        question: "A escola possui um protocolo escrito para atendimento a acidentes físicos e administração de medicamentos?",
+        hint: "A Lei Lucas (Lei 13.722/18) exige equipe capacitada e cadeia de custódia documental impecável de qualquer socorro.",
+        category: "Compliance & Legislação",
+        options: [
+          { label: "Sim, termo de autorização médica para remédios e formulário obrigatório de ocorrência.", points: 12.5, status: "adequate" },
+          { label: "Prestamos primeiros socorros, mas o registro é feito de forma informal (WhatsApp).", points: 5, status: "attention", alert: "Registros informais sem assinatura do responsável impedem comprovar socorro tempestivo." },
+          { label: "Não possuímos protocolo formal para incidentes médicos.", points: 0, status: "risk", alert: "Risco de indenizações com presunção de negligência contra a escola." },
+        ],
+      },
+      {
+        id: 6,
+        title: "6. Atas e Registros com Famílias",
+        question: "A coordenação e a direção registram em atas formais assinadas as reuniões delicadas com os pais?",
+        hint: "Em eventuais disputas, mensagens de WhatsApp não substituem uma ata formal de alinhamento com termo de ciência.",
+        category: "Governança Documental",
+        options: [
+          { label: "Sim, sempre confeccionamos ata formal com termo de ciência e assinatura.", points: 12.5, status: "adequate" },
+          { label: "Registramos apenas os casos mais graves; o restante fica em anotações internas.", points: 5, status: "attention", alert: "Mensagens soltas são facilmente descontextualizadas pelos pais em juízo." },
+          { label: "A comunicação com as famílias é quase toda verbal ou por mensagens de celular.", points: 0, status: "risk", alert: "Impossibilidade de comprovar que a escola orientou previamente os responsáveis." },
+        ],
+      },
+      {
+        id: 7,
+        title: "7. Inclusão Escolar e Alunos PCD",
+        question: "A escola possui procedimento jurídico para laudos, Plano de Ensino Individualizado (PEI) e limites legais?",
+        hint: "A Lei Brasileira de Inclusão (LBI) pune severamente a recusa de matrícula ou a exigência de cobranças complementares.",
+        category: "Compliance & Legislação",
+        options: [
+          { label: "Sim, procedimentos formais alinhados à LBI com acolhimento de laudos e PEI estruturado.", points: 12.5, status: "adequate" },
+          { label: "Fazemos as adaptações pedagógicas, mas há insegurança jurídica em relação a exigências de laudos.", points: 5, status: "attention", alert: "Incerteza na formalização atrai atritos recorrentes com as famílias." },
+          { label: "Não temos protocolo para inclusão; cada situação é tratada sem assessoria jurídica.", points: 0, status: "risk", alert: "Exposição a multas administrativas pesadas e denúncias ao Ministério Público." },
+        ],
+      },
+      {
+        id: 8,
+        title: "8. Consulta Preventiva em Decisões Sensíveis",
+        question: "Antes de decisões críticas (desligamento de aluno, advertências ou respostas a notificações), a escola consulta o jurídico?",
+        hint: "Mais de 80% das condenações contra escolas decorrem de decisões tomadas no calor da emoção sem validação técnica prévia.",
+        category: "Governança Documental",
+        options: [
+          { label: "Sim, decisões sensíveis passam por validação prévia de risco antes de qualquer envio.", points: 12.5, status: "adequate" },
+          { label: "Temos advogado, mas normalmente só acionamos quando o processo ou a notificação já chegou.", points: 4, status: "attention", alert: "Advogado como 'apagador de incêndios' tem poucas opções de defesa probatória." },
+          { label: "Não temos suporte jurídico preventivo; decidimos internamente sem consulta.", points: 0, status: "risk", alert: "A escola opera sob constante risco invisível de litígio." },
+        ],
+      },
+    ];
+
+    const STUDENT_BRACKETS = ["Até 200 alunos", "201 a 500 alunos", "501 a 1.000 alunos", "Mais de 1.000 alunos"];
+    const ROLES = ["Mantenedor(a)", "Diretor(a) Geral", "Coordenador(a) Pedagógico(a)", "Coordenador(a) Administrativo/Financeiro", "Outro cargo de gestão"];
+    const LEGAL_CONCERNS = ["Conflitos com pais e divergências de guarda", "Cobrança e inadimplência escolar", "Inclusão PCD e adaptações do PEI", "Bullying, cyberbullying e segurança", "ECA Digital e uso de imagem", "Relações trabalhistas com professores"];
+
+    function App() {
+      const [isKioskOpen, setIsKioskOpen] = useState(false);
+
+      const scrollToDiagnostic = () => {
+        const el = document.getElementById('diagnostico');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col bg-white text-slate-900 font-sans antialiased">
+          <Navbar onOpenKiosk={() => setIsKioskOpen(true)} onStartCheckup={scrollToDiagnostic} />
+          <main className="flex-1">
+            <Hero onStartCheckup={scrollToDiagnostic} />
+            <DiagnosticTool onOpenKiosk={() => setIsKioskOpen(true)} />
+            <CorePillars />
+            <PartnershipTiers onStartCheckup={scrollToDiagnostic} />
+            <FAQSection />
+          </main>
+          <Footer onStartCheckup={scrollToDiagnostic} />
+          <KioskModal isOpen={isKioskOpen} onClose={() => setIsKioskOpen(false)} onResetQuiz={scrollToDiagnostic} />
+        </div>
+      );
+    }
+
+    // NAVBAR
+    function Navbar({ onOpenKiosk, onStartCheckup }) {
+      const [menuOpen, setMenuOpen] = useState(false);
+
+      return (
+        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <div className="flex items-center justify-between h-16">
+              
+              <a href="#" className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-navy-950 flex items-center justify-center text-white text-xs font-bold">
+                  ⚖️
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-lg text-navy-950 tracking-tight">
+                    Escola<span className="text-brand-600"> Jurídica</span>
+                  </span>
+                  <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                    Geedu Connect
+                  </span>
+                </div>
+              </a>
+
+              <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-slate-600">
+                <a href="#diagnostico" className="hover:text-brand-600 transition-colors">Diagnóstico (2 min)</a>
+                <a href="#pilares" className="hover:text-brand-600 transition-colors">Como Funciona</a>
+                <a href="#planos" className="hover:text-brand-600 transition-colors">Planos</a>
+                <a href="#faq" className="hover:text-brand-600 transition-colors">Dúvidas</a>
+              </nav>
+
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={onOpenKiosk}
+                  title="Modo Stand & QR Code"
+                  className="p-2 rounded-lg text-slate-500 hover:text-navy-950 hover:bg-slate-100 text-sm"
+                >
+                  📱
+                </button>
+                <button
+                  onClick={onStartCheckup}
+                  className="px-4 py-2 rounded-lg font-semibold text-xs text-white bg-navy-950 hover:bg-navy-800 transition-colors"
+                >
+                  Fazer Check-up &rarr;
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </header>
+      );
+    }
+
+    // HERO
+    function Hero({ onStartCheckup }) {
+      return (
+        <section className="pt-20 pb-20 md:pt-28 md:pb-24 bg-white border-b border-slate-200/80 text-center">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6">
+            
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-600"></span>
+              <span>Gestão Jurídica Preventiva para Instituições de Ensino</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-5xl md:text-[52px] font-extrabold text-navy-950 tracking-tight leading-[1.12] mb-6">
+              Sua escola está <span className="text-brand-600">juridicamente protegida</span> ou apenas apagando incêndios?
+            </h1>
+
+            <p className="text-base sm:text-xl text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto mb-8">
+              Organizamos juridicamente a sua instituição para evitar atritos com famílias e decisões improvisadas antes que elas virem processos judiciais.
+            </p>
+
+            <div className="max-w-xl mx-auto p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs sm:text-sm font-medium italic mb-8">
+              “O maior risco jurídico de uma escola normalmente não começa no processo. <span className="text-navy-950 font-semibold not-italic">Começa em uma decisão cotidiana mal documentada.</span>”
+            </div>
+
+            <div className="flex justify-center mb-8">
+              <button
+                onClick={onStartCheckup}
+                className="w-full sm:w-auto px-8 py-4 rounded-xl font-bold text-sm text-white bg-brand-600 hover:bg-brand-700 shadow-sm transition-all"
+              >
+                Fazer o Check-up Jurídico Escolar (2 Minutos) &darr;
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500">
+              <span>⏱️ Leva apenas 2 minutos</span>
+              <span>🔒 Adequado ao ECA Digital & LGPD</span>
+              <span>📋 Gera Mapa de Riscos 30/60/90 dias</span>
+            </div>
+
+          </div>
+        </section>
+      );
+    }
+
+    // DIAGNOSTIC QUIZ
+    function DiagnosticTool({ onOpenKiosk }) {
+      const [stage, setStage] = useState('quiz');
+      const [currentIdx, setCurrentIdx] = useState(0);
+      const [answers, setAnswers] = useState({});
+
+      const [formData, setFormData] = useState({
+        name: '',
+        schoolName: '',
+        role: ROLES[0],
+        studentCount: STUDENT_BRACKETS[1],
+        whatsapp: '',
+        mainConcern: LEGAL_CONCERNS[0],
+      });
+      const [formErrors, setFormErrors] = useState({});
+
+      const currentQ = DIAGNOSTIC_QUESTIONS[currentIdx];
+      const progressPercent = Math.round(((currentIdx + 1) / DIAGNOSTIC_QUESTIONS.length) * 100);
+
+      const handleSelectOption = (option) => {
+        setAnswers(prev => ({ ...prev, [currentQ.id]: option }));
+        setTimeout(() => {
+          if (currentIdx < DIAGNOSTIC_QUESTIONS.length - 1) {
+            setCurrentIdx(currentIdx + 1);
+          } else {
+            setStage('lead_form');
+          }
+        }, 200);
+      };
+
+      const calculateScore = () => {
+        let total = 0;
+        Object.values(answers).forEach((a) => { total += (a.points || 0); });
+        return Math.round(total);
+      };
+
+      const getRiskBreakdown = () => {
+        const immediateRisks = [];
+        const attentionPoints = [];
+        const adequatePoints = [];
+
+        DIAGNOSTIC_QUESTIONS.forEach((q) => {
+          const selected = answers[q.id];
+          if (!selected) return;
+          if (selected.status === 'risk') immediateRisks.push({ title: q.title });
+          else if (selected.status === 'attention') attentionPoints.push({ title: q.title });
+          else adequatePoints.push({ title: q.title });
+        });
+
+        return { immediateRisks, attentionPoints, adequatePoints };
+      };
+
+      const handleSubmitLead = (e) => {
+        e.preventDefault();
+        const errors = {};
+        if (!formData.name.trim()) errors.name = 'Informe seu nome.';
+        if (!formData.schoolName.trim()) errors.schoolName = 'Informe a escola.';
+        if (!formData.whatsapp.trim() || formData.whatsapp.length < 8) errors.whatsapp = 'WhatsApp com DDD obrigatório.';
+
+        if (Object.keys(errors).length > 0) {
+          setFormErrors(errors);
+          return;
+        }
+
+        setFormErrors({});
+        setStage('result');
+        try {
+          if (window.confetti) window.confetti({ particleCount: 50, spread: 50, origin: { y: 0.6 } });
+        } catch (err) {}
+      };
+
+      const handleReset = () => {
+        setAnswers({});
+        setCurrentIdx(0);
+        setFormData({
+          name: '',
+          schoolName: '',
+          role: ROLES[0],
+          studentCount: STUDENT_BRACKETS[1],
+          whatsapp: '',
+          mainConcern: LEGAL_CONCERNS[0],
+        });
+        setFormErrors({});
+        setStage('quiz');
+      };
+
+      const score = calculateScore();
+      const { immediateRisks, attentionPoints, adequatePoints } = getRiskBreakdown();
+
+      const generateWhatsAppLink = () => {
+        const text = `Olá! Realizei o Check-up da Escola Jurídica no Geedu Connect.%0A%0A` +
+          `*Nome:* ${formData.name}%0A` +
+          `*Escola:* ${formData.schoolName} (${formData.studentCount})%0A` +
+          `*Cargo:* ${formData.role}%0A` +
+          `*Score:* ${score}/100%0A` +
+          `*Riscos Imediatos:* ${immediateRisks.length}%0A` +
+          `*Pontos de Atenção:* ${attentionPoints.length}%0A` +
+          `*Dor:* ${formData.mainConcern}%0A%0A` +
+          `Gostaria de agendar a devolutiva do Mapa de Riscos e o Plano 30/60/90 dias.`;
+
+        return `https://api.whatsapp.com/send?phone=5579999999999&text=${text}`;
+      };
+
+      return (
+        <section id="diagnostico" className="py-16 md:py-20 bg-slate-50 border-b border-slate-200/80">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6">
+            
+            <div className="text-center mb-8">
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 mb-1 block">
+                Diagnóstico Rápido
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-navy-950 tracking-tight">
+                Check-up de Segurança Jurídica Escolar
+              </h2>
+              <p className="text-slate-600 text-xs sm:text-sm mt-1">
+                Descubra em 8 perguntas onde a sua escola está exposta a conflitos e litígios.
+              </p>
+            </div>
+
+            {/* STAGE 1: QUESTIONS */}
+            {stage === 'quiz' && (
+              <div className="bg-white border border-slate-200/90 rounded-2xl shadow-sm p-6 sm:p-8">
+                <div className="mb-6">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-2">
+                    <span>Pergunta {currentIdx + 1} de {DIAGNOSTIC_QUESTIONS.length}</span>
+                    <span className="text-brand-600 font-bold">{progressPercent}%</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-brand-600 transition-all duration-300 ease-out" style={{ width: `${progressPercent}%` }} />
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                    {currentQ.category}
+                  </span>
+                  <h3 className="text-lg sm:text-xl font-bold text-navy-950 leading-snug mb-2">
+                    {currentQ.question}
+                  </h3>
+                  <p className="text-xs text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                    💡 <strong>Contexto:</strong> {currentQ.hint}
+                  </p>
+                </div>
+
+                <div className="space-y-2.5 mb-6">
+                  {currentQ.options.map((option, idx) => {
+                    const isSelected = answers[currentQ.id]?.label === option.label;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleSelectOption(option)}
+                        className={`w-full text-left p-3.5 sm:p-4 rounded-xl border text-xs sm:text-sm transition-all flex items-start gap-3 ${
+                          isSelected ? 'border-brand-600 bg-brand-50/60 font-medium text-navy-950' : 'border-slate-200 hover:border-slate-300 text-slate-700'
+                        }`}
+                      >
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center mt-0.5 flex-shrink-0 ${
+                          isSelected ? 'border-brand-600 bg-brand-600' : 'border-slate-300'
+                        }`}>
+                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </div>
+                        <span>{option.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs">
+                  <button
+                    onClick={() => { if (currentIdx > 0) setCurrentIdx(currentIdx - 1); }}
+                    disabled={currentIdx === 0}
+                    className="text-slate-500 hover:text-navy-950 disabled:opacity-30"
+                  >
+                    &larr; Anterior
+                  </button>
+                  <span className="text-[11px] text-slate-400">Tempo estimado: ~2 minutos</span>
+                </div>
+              </div>
+            )}
+
+            {/* STAGE 2: LEAD FORM */}
+            {stage === 'lead_form' && (
+              <div className="bg-white border border-slate-200/90 rounded-2xl shadow-sm p-6 sm:p-8">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-navy-950">Respostas concluídas!</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Informe os dados institucionais para calcularmos o seu <strong>Índice de Segurança</strong>:
+                  </p>
+                </div>
+
+                <form onSubmit={handleSubmitLead} className="space-y-3 max-w-md mx-auto">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Seu Nome *</label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Ex: Ana Paula Mendonça"
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs focus:outline-none focus:border-brand-600"
+                    />
+                    {formErrors.name && <p className="text-rose-500 text-[11px] mt-0.5">{formErrors.name}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Nome da Escola *</label>
+                    <input
+                      type="text"
+                      value={formData.schoolName}
+                      onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
+                      placeholder="Ex: Colégio Horizonte"
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs focus:outline-none focus:border-brand-600"
+                    />
+                    {formErrors.schoolName && <p className="text-rose-500 text-[11px] mt-0.5">{formErrors.schoolName}</p>}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Seu Cargo</label>
+                      <select
+                        value={formData.role}
+                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs"
+                      >
+                        {ROLES.map((r, i) => <option key={i} value={r}>{r}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Alunos</label>
+                      <select
+                        value={formData.studentCount}
+                        onChange={(e) => setFormData({ ...formData, studentCount: e.target.value })}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs"
+                      >
+                        {STUDENT_BRACKETS.map((b, i) => <option key={i} value={b}>{b}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">WhatsApp com DDD *</label>
+                    <input
+                      type="tel"
+                      value={formData.whatsapp}
+                      onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                      placeholder="(79) 99999-9999"
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs focus:outline-none focus:border-brand-600"
+                    />
+                    {formErrors.whatsapp && <p className="text-rose-500 text-[11px] mt-0.5">{formErrors.whatsapp}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Principal Insegurança Jurídica</label>
+                    <select
+                      value={formData.mainConcern}
+                      onChange={(e) => setFormData({ ...formData, mainConcern: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs"
+                    >
+                      {LEGAL_CONCERNS.map((c, i) => <option key={i} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="pt-2">
+                    <button type="submit" className="w-full py-3 px-4 rounded-xl font-bold text-xs text-white bg-brand-600 hover:bg-brand-700 transition-all">
+                      Calcular Meu Índice &rarr;
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* STAGE 3: RESULT */}
+            {stage === 'result' && (
+              <div className="bg-white border border-slate-200/90 rounded-2xl shadow-sm p-6 sm:p-8">
+                <div className="text-center pb-6 border-b border-slate-100">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">
+                    Resultado • {formData.schoolName}
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-navy-950">
+                    Índice de Segurança Jurídica
+                  </h3>
+
+                  <div className="my-5 inline-flex items-center gap-4 px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200">
+                    <div className={`text-4xl font-black ${
+                      score >= 80 ? 'text-emerald-600' : score >= 50 ? 'text-amber-600' : 'text-rose-600'
+                    }`}>
+                      {score}<span className="text-base text-slate-400 font-bold">/100</span>
+                    </div>
+                    <div className="text-left border-l border-slate-200 pl-4">
+                      <span className="text-xs font-bold text-navy-950 block">
+                        {score >= 80 ? 'Nível Adequado' : score >= 50 ? 'Vulnerabilidades Detectadas' : 'Exposição Crítica'}
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        {immediateRisks.length} riscos imediatos identificados
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="py-6 border-b border-slate-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div className="p-3 rounded-xl bg-rose-50 border border-rose-200">
+                      <span className="font-bold text-rose-800 block mb-1">🔴 Riscos Imediatos ({immediateRisks.length})</span>
+                      <p className="text-[11px] text-rose-700">Exigem correção contratual urgente.</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
+                      <span className="font-bold text-amber-800 block mb-1">🟡 Atenção ({attentionPoints.length})</span>
+                      <p className="text-[11px] text-amber-700">Rotinas informais com potencial de passivo.</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                      <span className="font-bold text-emerald-800 block mb-1">🟢 Adequado ({adequatePoints.length})</span>
+                      <p className="text-[11px] text-emerald-700">Práticas alinhadas à prevenção.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6 text-center max-w-md mx-auto">
+                  <h4 className="text-sm font-bold text-navy-950 mb-1">
+                    Receba o Mapa de Riscos Detalhado & Plano 30/60/90 Dias
+                  </h4>
+                  <p className="text-xs text-slate-500 mb-5">
+                    Apresentaremos recomendações específicas para a realidade de <strong>{formData.schoolName}</strong>.
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+                    <a
+                      href={generateWhatsAppLink()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-xs text-white bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      <span>💬 Enviar no WhatsApp</span>
+                    </a>
+                    <button
+                      onClick={handleReset}
+                      className="w-full sm:w-auto px-4 py-3 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                    >
+                      Novo Teste
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </section>
+      );
+    }
+
+    // CORE PILLARS
+    function CorePillars() {
+      const pillars = [
+        {
+          title: "Governança Documental",
+          description: "Revisão e blindagem dos contratos educacionais, termos de imagem/ECA Digital, regimento escolar e atas com valor probatório legal.",
+        },
+        {
+          title: "Gestão de Conflitos",
+          description: "Orientação prévia antes de reuniões difíceis com famílias, protocolos objetivos para divergências de pais separados e sanções disciplinares.",
+        },
+        {
+          title: "Compliance & Legislação",
+          description: "Adequação prática às exigências da Lei Antibullying (Lei 14.811/24), Lei Lucas (socorro/acidentes) e inclusão de alunos com deficiência (LBI).",
+        },
+      ];
+
+      return (
+        <section id="pilares" className="py-20 bg-white border-b border-slate-200/80">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <div className="text-center max-w-xl mx-auto mb-12">
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 block mb-1">Metodologia</span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-navy-950 tracking-tight">Como Funciona a Escola Jurídica</h2>
+              <p className="mt-2 text-xs sm:text-sm text-slate-600">Segurança para a direção decidir no dia a dia, sem burocracia desnecessária.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {pillars.map((item, idx) => (
+                <div key={idx} className="p-6 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white transition-all">
+                  <div className="w-8 h-8 rounded-lg bg-navy-950 text-white flex items-center justify-center text-xs font-bold mb-4">
+                    0{idx + 1}
+                  </div>
+                  <h3 className="text-base font-bold text-navy-950 mb-2">{item.title}</h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // TIERS
+    function PartnershipTiers({ onStartCheckup }) {
+      const tiers = [
+        {
+          name: "Escola Essencial",
+          tagline: "Blindagem Documental",
+          description: "Ideal para organizar a base de contratos e ter suporte prioritário para dúvidas rotineiras da gestão.",
+          highlights: [
+            "Revisão anual do Contrato de Matrícula",
+            "Termos de imagem, dados e ECA Digital",
+            "Canal direto para consultas preventivas",
+            "Modelos oficiais de atas probatórias",
+          ],
+        },
+        {
+          name: "Escola Protegida",
+          tagline: "Mais Escolhido",
+          popular: true,
+          description: "Acompanhamento contínuo com protocolos estruturados de incidentes e treinamentos semestrais da equipe.",
+          highlights: [
+            "Tudo incluso no Plano Essencial",
+            "Protocolos de bullying (Lei 14.811/24)",
+            "Procedimentos de inclusão PCD (LBI / PEI)",
+            "Alinhamento prévio para reuniões com pais",
+            "Capacitações semestrais da equipe",
+          ],
+        },
+        {
+          name: "Escola 360",
+          tagline: "Governança Integrada",
+          description: "Consultoria estratégica completa, comitê de incidentes graves e auditoria perene de governança.",
+          highlights: [
+            "Tudo incluso no Plano Protegido",
+            "Jurídico integrado à mantenedora",
+            "Comitê de resposta rápida para crises",
+            "Auditoria perene de dados e compliance",
+          ],
+        },
+      ];
+
+      return (
+        <section id="planos" className="py-20 bg-slate-50 border-b border-slate-200/80">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <div className="text-center max-w-xl mx-auto mb-12">
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 block mb-1">Modelos de Parceria</span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-navy-950 tracking-tight">Níveis de Proteção</h2>
+              <p className="mt-2 text-xs sm:text-sm text-slate-600">Planos contínuos estruturados para o porte e realidade de cada instituição.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+              {tiers.map((tier, idx) => (
+                <div
+                  key={idx}
+                  className={`rounded-2xl p-6 sm:p-7 flex flex-col justify-between border transition-all ${
+                    tier.popular ? 'bg-navy-950 text-white border-navy-900 shadow-xl' : 'bg-white text-slate-900 border-slate-200'
+                  }`}
+                >
+                  <div>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full inline-block mb-3 ${
+                      tier.popular ? 'bg-brand-500/20 text-brand-300' : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {tier.tagline}
+                    </span>
+
+                    <h3 className={`text-xl font-bold mb-2 ${tier.popular ? 'text-white' : 'text-navy-950'}`}>{tier.name}</h3>
+                    <p className={`text-xs leading-relaxed mb-6 ${tier.popular ? 'text-slate-300' : 'text-slate-600'}`}>{tier.description}</p>
+
+                    <div className={`pt-4 border-t ${tier.popular ? 'border-slate-800' : 'border-slate-100'}`}>
+                      <ul className="space-y-2.5 text-xs">
+                        {tier.highlights.map((h, hIdx) => (
+                          <li key={hIdx} className="flex items-start gap-2">
+                            <span className={tier.popular ? 'text-brand-400' : 'text-emerald-600'}>✓</span>
+                            <span className={tier.popular ? 'text-slate-200' : 'text-slate-700'}>{h}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 mt-6 border-t border-slate-100/10">
+                    <button
+                      onClick={onStartCheckup}
+                      className={`w-full py-3 px-4 rounded-xl text-xs font-bold transition-all ${
+                        tier.popular ? 'bg-brand-600 hover:bg-brand-500 text-white' : 'bg-navy-950 hover:bg-navy-800 text-white'
+                      }`}
+                    >
+                      Fazer Check-up &rarr;
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-center text-[11px] text-slate-400 mt-8">
+              ℹ️ Valores personalizados com base no número de alunos após o diagnóstico.
+            </p>
+          </div>
+        </section>
+      );
+    }
+
+    // FAQ
+    function FAQSection() {
+      const [openIdx, setOpenIdx] = useState(0);
+
+      const faqs = [
+        {
+          q: "Já temos um advogado que acionamos quando precisamos. Por que contratar a Escola Jurídica?",
+          a: "No modelo tradicional, o advogado só é acionado após o fato consumado: a reunião já foi feita e a mensagem no WhatsApp já foi enviada. A Escola Jurídica atua preventivamente com a equipe para que as decisões tenham respaldo prévio, evitando que o conflito chegue à fase judicial."
+        },
+        {
+          q: "O que recebemos após o Check-up Jurídico?",
+          a: "Você recebe um raio-X institucional classificado em semáforo (🔴 Risco Imediato, 🟡 Atenção, 🟢 Adequado) e um Plano de Ação 30/60/90 Dias com o cronograma prioritário de ajustes para a sua escola."
+        },
+        {
+          q: "A assessoria preventiva vai burocratizar a rotina escolar?",
+          a: "Não. Nosso papel é simplificar rotinas e criar modelos rápidos de atas para que coordenadores e professores fiquem protegidos sem perder tempo com burocracias."
+        },
+        {
+          q: "Nossa escola é de pequeno ou médio porte. O programa se aplica a nós?",
+          a: "Sim, especialmente para escolas independentes. Um único processo por falha documental ou atrito de guarda pode causar impacto financeiro grave. Prevenção é segurança de gestão."
+        }
+      ];
+
+      return (
+        <section id="faq" className="py-20 bg-white border-b border-slate-200/80">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-10">
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 block mb-1">Dúvidas Comuns</span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-navy-950 tracking-tight">Perguntas Frequentes</h2>
+            </div>
+
+            <div className="space-y-3">
+              {faqs.map((faq, idx) => {
+                const isOpen = openIdx === idx;
+                return (
+                  <div key={idx} className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                    <button
+                      onClick={() => setOpenIdx(isOpen ? null : idx)}
+                      className="w-full text-left p-4 sm:p-5 flex items-center justify-between gap-4 font-semibold text-xs sm:text-sm text-navy-950 hover:text-brand-600"
+                    >
+                      <span>{faq.q}</span>
+                      <span>{isOpen ? '▲' : '▼'}</span>
+                    </button>
+                    {isOpen && (
+                      <div className="px-4 sm:px-5 pb-5 text-xs text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
+                        {faq.a}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // FOOTER
+    function Footer({ onStartCheckup }) {
+      return (
+        <footer className="bg-navy-950 text-slate-400 text-xs py-12 border-t border-navy-900">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-slate-800">
+              <div>
+                <span className="font-bold text-sm text-white block">Escola Jurídica</span>
+                <span className="text-[10px] text-slate-400">Gestão Preventiva para Instituições de Ensino</span>
+              </div>
+              <div className="flex items-center gap-6 text-slate-300 text-xs">
+                <a href="#diagnostico" className="hover:text-white">Diagnóstico</a>
+                <a href="#pilares" className="hover:text-white">Como Funciona</a>
+                <a href="#planos" className="hover:text-white">Planos</a>
+                <a href="#faq" className="hover:text-white">Dúvidas</a>
+                <button onClick={onStartCheckup} className="text-brand-400 hover:text-brand-300 font-semibold">Fazer Check-up &rarr;</button>
+              </div>
+            </div>
+
+            <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-[11px]">
+              <div>&copy; 2026 Escola Jurídica • Geedu Connect Aracaju.</div>
+              <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white">
+                Voltar ao topo ↑
+              </button>
+            </div>
+          </div>
+        </footer>
+      );
+    }
+
+    // KIOSK MODAL
+    function KioskModal({ isOpen, onClose, onResetQuiz }) {
+      if (!isOpen) return null;
+      const currentUrl = typeof window !== 'undefined' ? window.location.href.split('#')[0] : 'https://escola-juridica.com.br';
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-lg rounded-2xl p-6 border border-slate-200 shadow-xl">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <h3 className="font-bold text-sm text-navy-950">Stand Geedu Connect • QR Code</h3>
+              <button onClick={onClose} className="text-slate-400 hover:text-slate-700 font-bold">✕</button>
+            </div>
+
+            <div className="py-6 text-center">
+              <p className="text-xs text-slate-600 mb-4">Aponte a câmera para realizar o <strong>Check-up em 2 minutos</strong>:</p>
+              <div className="p-4 bg-white rounded-2xl shadow-md border-2 border-slate-900 inline-block mb-4">
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl + '#diagnostico')}&color=0b132b`}
+                  alt="QR Code"
+                  className="w-44 h-44 mx-auto rounded"
+                />
+              </div>
+              <p className="text-[11px] text-slate-400">Problemas jurídicos também são problemas de gestão.</p>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 flex justify-end gap-2">
+              <button onClick={onClose} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Fechar</button>
+              <button 
+                onClick={() => {
+                  onResetQuiz();
+                  onClose();
+                  const el = document.getElementById('diagnostico');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-4 py-2 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-lg"
+              >
+                Fazer no Tablet
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
