@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Shield, QrCode, ArrowRight, Menu, X } from 'lucide-react';
+import { Shield, QrCode, ArrowRight, Menu, X, BarChart3 } from 'lucide-react';
 
-export default function Navbar({ onOpenKiosk, onStartCheckup }) {
+export default function Navbar({ onOpenKiosk, onStartCheckup, onOpenPainSummary }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -40,6 +40,14 @@ export default function Navbar({ onOpenKiosk, onStartCheckup }) {
               className="p-2 rounded-lg text-slate-500 hover:text-navy-950 hover:bg-slate-100 transition-colors"
             >
               <QrCode className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={onOpenPainSummary}
+              title="Resumo de Dores das Escolas"
+              className="hidden md:flex p-2 rounded-lg text-slate-500 hover:text-navy-950 hover:bg-slate-100 transition-colors"
+            >
+              <BarChart3 className="w-4 h-4" />
             </button>
 
             <button

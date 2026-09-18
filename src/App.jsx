@@ -7,9 +7,11 @@ import PartnershipTiers from './components/PartnershipTiers';
 import FAQSection from './components/FAQSection';
 import Footer from './components/Footer';
 import KioskModal from './components/KioskModal';
+import AdminPainSummaryModal from './components/AdminPainSummaryModal';
 
 export default function App() {
   const [isKioskOpen, setIsKioskOpen] = useState(false);
+  const [isPainSummaryOpen, setIsPainSummaryOpen] = useState(false);
 
   const scrollToDiagnostic = () => {
     const el = document.getElementById('diagnostico');
@@ -22,6 +24,7 @@ export default function App() {
       <Navbar 
         onOpenKiosk={() => setIsKioskOpen(true)} 
         onStartCheckup={scrollToDiagnostic}
+        onOpenPainSummary={() => setIsPainSummaryOpen(true)}
       />
 
       {/* Main Flow: Hero -> Diagnostic -> Pillars -> Tiers -> FAQ */}
@@ -41,6 +44,12 @@ export default function App() {
         isOpen={isKioskOpen} 
         onClose={() => setIsKioskOpen(false)}
         onResetQuiz={scrollToDiagnostic}
+      />
+
+      {/* Admin Pain Summary Modal */}
+      <AdminPainSummaryModal
+        isOpen={isPainSummaryOpen}
+        onClose={() => setIsPainSummaryOpen(false)}
       />
     </div>
   );

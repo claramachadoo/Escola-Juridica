@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { DIAGNOSTIC_QUESTIONS, STUDENT_BRACKETS, ROLES, LEGAL_CONCERNS } from '../data/diagnosticQuestions';
+import { saveDiagnostic } from '../lib/supabase';
 
 export default function DiagnosticQuiz({ whatsappNumber = "5579999999999" }) {
   const [stage, setStage] = useState('quiz'); // 'quiz' | 'lead_form' | 'result'
@@ -93,6 +94,24 @@ export default function DiagnosticQuiz({ whatsappNumber = "5579999999999" }) {
 
     setFormErrors({});
     setStage('result');
+
+    // Persiste no Supabase e no cache de dores
+    const finalScore = calculateScore();
+    const { immediateRisks: rIm, attentionPoints: rAt, adequatePoints: rAd } = getRiskBreakdown();
+    saveDiagnostic({
+      name: formData.name,
+      schoolName: formData.schoolName,
+      role: formData.role,
+      studentCount: formData.studentCount,
+      whatsapp: formData.whatsapp,
+      mainConcern: formData.mainConcern,
+      score: finalScore,
+      immediateRisks: rIm,
+      attentionPoints: rAt,
+      adequatePoints: rAd,
+      answers,
+    });
+
     try {
       confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
     } catch (err) {}
