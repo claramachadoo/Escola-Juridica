@@ -19,7 +19,7 @@ import confetti from 'canvas-confetti';
 import { DIAGNOSTIC_QUESTIONS, STUDENT_BRACKETS, ROLES, LEGAL_CONCERNS } from '../data/diagnosticQuestions';
 import { saveDiagnostic } from '../lib/supabase';
 
-export default function DiagnosticQuiz({ whatsappNumber = "5579999999999" }) {
+export default function DiagnosticQuiz({ whatsappNumber = "55799988255136" }) {
   const [stage, setStage] = useState('quiz'); // 'quiz' | 'lead_form' | 'result'
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState({});
